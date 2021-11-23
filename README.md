@@ -28,7 +28,7 @@ cmake --build .
  - [x] Set up Git
  - [x] Use CMake to build the code
  - [x] Write a simple readme to describe the project and how to build and run it
- - [ ] Use clang-format to make the code more readable
+ - [x] Use clang-format to make the code more readable
  - [ ] Set-up clang-tidy & fix what needs to be fixed
  - [ ] Turn on most relevant warnings on & fix what needs to be fixed
  - [ ] Set-up CI to make sure the code build without warnings on multiple platforms
