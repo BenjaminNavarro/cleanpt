@@ -29,7 +29,7 @@ cmake --build .
  - [x] Use CMake to build the code
  - [x] Write a simple readme to describe the project and how to build and run it
  - [x] Use clang-format to make the code more readable
- - [ ] Set-up clang-tidy & fix what needs to be fixed
+ - [x] Set-up clang-tidy & fix what needs to be fixed
  - [ ] Turn on most relevant warnings on & fix what needs to be fixed
  - [ ] Set-up CI to make sure the code build without warnings on multiple platforms
  - [ ] Start reading the code and refactoring it. I guess I'll need to:
