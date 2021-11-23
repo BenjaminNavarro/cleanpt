@@ -7,8 +7,12 @@ project(
     LANGUAGES CXX
 )
 
+# handle additional warnings
+include(cmake/CompilerOptions.cmake)
+
 add_executable(cleanpt main.cpp)
 target_compile_features(cleanpt PRIVATE cxx_std_17)
+add_warnings(cleanpt)
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)

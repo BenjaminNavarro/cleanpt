@@ -100,14 +100,14 @@ inline double clamp(double x) {
 }
 
 inline int to_int(double x) {
-    return std::lround(pow(clamp(x), 1 / 2.2) * 255);
+    return static_cast<int>(std::lround(pow(clamp(x), 1 / 2.2) * 255));
 }
 
-inline bool intersect(const Ray& r, double& t, int& id) {
-    double n = spheres.size();
+inline bool intersect(const Ray& r, double& t, std::size_t& id) {
+    std::size_t n = spheres.size();
     double d;
     double inf = t = 1e20;
-    for (int i = int(n); i--;) {
+    for (std::size_t i = n; i != 0; i--) {
         if (((d = spheres[i].intersect(r)) != 0.0) && d < t) {
             t = d;
             id = i;
@@ -117,8 +117,8 @@ inline bool intersect(const Ray& r, double& t, int& id) {
 }
 
 Vec radiance(const Ray& r, int depth, unsigned short* Xi) {
-    double t;   // distance to intersection
-    int id = 0; // id of intersected object
+    double t;           // distance to intersection
+    std::size_t id = 0; // id of intersected object
     if (!intersect(r, t, id)) {
         return {}; // if miss, return black
     }
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
     Vec cy = (cx % cam.d).norm() * .5135;
     Vec r;
     std::vector<Vec> c;
-    c.resize(static_cast<long>(w) * static_cast<long>(h));
+    c.resize(static_cast<std::size_t>(w) * static_cast<std::size_t>(h));
 #pragma omp parallel for schedule(dynamic, 1) private(r) // OpenMP
     for (int y = 0; y < h; y++) {                        // Loop over image rows
         fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * 4,
@@ -208,14 +208,17 @@ int main(int argc, char* argv[]) {
                         r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) *
                                     (1. / samps);
                     } // Camera rays are pushed ^^^^^ forward to start in interior
-                    c[i] = c[i] + Vec(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+                    c[static_cast<std::size_t>(i)] =
+                        c[static_cast<std::size_t>(i)] +
+                        Vec(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
                 }
             }
         }
     }
     FILE* f = fopen("image.ppm", "w"); // Write image to PPM file.
     fprintf(f, "P3\n%d %d\n%d\n", w, h, 255);
-    for (int i = 0; i < w * h; i++) {
+    for (std::size_t i = 0;
+         i < static_cast<std::size_t>(w) * static_cast<std::size_t>(h); i++) {
         fprintf(f, "%d %d %d ", to_int(c[i].x), to_int(c[i].y), to_int(c[i].z));
     }
 }
