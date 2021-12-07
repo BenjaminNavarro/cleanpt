@@ -4,6 +4,7 @@
 
 #include <array>
 #include <vector>
+#include <cassert>
 
 // Usage: time ./cleanpt 5000 && display image.ppm
 
@@ -105,9 +106,10 @@ inline int to_int(double x) {
 
 inline bool intersect(const Ray& r, double& t, std::size_t& id) {
     std::size_t n = spheres.size();
+    assert(n > 0);
     double d;
     double inf = t = 1e20;
-    for (std::size_t i = n; i != 0; i--) {
+    for (std::size_t i = n - 1; i != 0; i--) {
         if (((d = spheres[i].intersect(r)) != 0.0) && d < t) {
             t = d;
             id = i;
