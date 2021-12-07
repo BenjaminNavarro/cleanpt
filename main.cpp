@@ -8,65 +8,84 @@
 
 // Usage: time ./cleanpt 5000 && display image.ppm
 
-struct Vec {
-    double x, y, z; // position, also color (r,g,b)
+struct Position {
+    double x{};
+    double y{};
+    double z{};
 
-    Vec(double x_ = 0, double y_ = 0, double z_ = 0) {
-        x = x_;
-        y = y_;
-        z = z_;
-    }
-
-    Vec operator+(const Vec& b) const {
+    constexpr Position operator+(const Position& b) const {
         return {x + b.x, y + b.y, z + b.z};
     }
 
-    Vec operator-(const Vec& b) const {
+    constexpr Position operator-(const Position& b) const {
         return {x - b.x, y - b.y, z - b.z};
     }
 
-    Vec operator*(double b) const {
+    constexpr Position operator*(double b) const {
         return {x * b, y * b, z * b};
     }
 
-    Vec mult(const Vec& b) const {
+    constexpr Position mult(const Position& b) const {
         return {x * b.x, y * b.y, z * b.z};
     }
 
-    Vec& norm() {
+    Position& norm() {
         return *this = *this * (1 / sqrt(x * x + y * y + z * z));
     }
 
-    double dot(const Vec& b) const {
+    constexpr double dot(const Position& b) const {
         return x * b.x + y * b.y + z * b.z;
     }
 
     // cross:
-    Vec operator%(Vec& b) const {
+    constexpr Position operator%(const Position& b) const {
         return {y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x};
     }
 };
 
-struct Ray {
-    Vec o, d;
+struct Color {
+    double r{};
+    double g{};
+    double b{};
 
-    Ray(Vec o_, Vec d_) : o(o_), d(d_) {
+    constexpr Color operator*(double scale) const {
+        return {r * scale, g * scale, b * scale};
+    }
+
+    constexpr Color mult(const Color& other) const {
+        return {r * other.r, g * other.g, b * other.b};
+    }
+
+    constexpr Color operator+(const Color& other) const {
+        return {r + other.r, g + other.g, b + other.b};
+    }
+};
+
+constexpr double maximum_reflection(Color color) {
+    return color.r > color.g && color.r > color.b ? color.r
+           : color.g > color.b                    ? color.g
+                                                  : color.b;
+}
+
+struct Ray {
+    Position o, d;
+
+    Ray(Position o_, Position d_) : o(o_), d(d_) {
     }
 };
 
 enum ReflT { DIFF, SPEC, REFR }; // material types, used in radiance()
 
 struct Sphere {
-    double rad;  // radius
-    Vec p, e, c; // position, emission, color
-    ReflT refl;  // reflection type (DIFFuse, SPECular, REFRactive)
-
-    Sphere(double rad_, Vec p_, Vec e_, Vec c_, ReflT refl_)
-        : rad(rad_), p(p_), e(e_), c(c_), refl(refl_) {
-    }
+    double rad{}; // radius
+    Position p{};
+    Color e{};
+    Color c{};    // position, emission, color
+    ReflT refl{}; // reflection type (DIFFuse, SPECular, REFRactive)
 
     double intersect(const Ray& r) const { // returns distance, 0 if nohit
-        Vec op = p - r.o; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+        // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+        const auto op = p - r.o;
         double t;
         double eps = 1e-4;
         double b = op.dot(r.d);
@@ -82,18 +101,23 @@ struct Sphere {
 
 std::array spheres{
     // Scene: radius, position, emission, color, material
-    Sphere(1e5, Vec(1e5 + 1, 40.8, 81.6), Vec(), Vec(.75, .25, .25),
-           DIFF), // Left
-    Sphere(1e5, Vec(-1e5 + 99, 40.8, 81.6), Vec(), Vec(.25, .25, .75),
-           DIFF),                                                     // Rght
-    Sphere(1e5, Vec(50, 40.8, 1e5), Vec(), Vec(.75, .75, .75), DIFF), // Back
-    Sphere(1e5, Vec(50, 40.8, -1e5 + 170), Vec(), Vec(), DIFF),       // Frnt
-    Sphere(1e5, Vec(50, 1e5, 81.6), Vec(), Vec(.75, .75, .75), DIFF), // Botm
-    Sphere(1e5, Vec(50, -1e5 + 81.6, 81.6), Vec(), Vec(.75, .75, .75),
-           DIFF),                                                      // Top
-    Sphere(16.5, Vec(27, 16.5, 47), Vec(), Vec(1, 1, 1) * .999, SPEC), // Mirr
-    Sphere(16.5, Vec(73, 16.5, 78), Vec(), Vec(1, 1, 1) * .999, REFR), // Glas
-    Sphere(600, Vec(50, 681.6 - .27, 81.6), Vec(12, 12, 12), Vec(), DIFF) // Lite
+    Sphere{1e5, Position{1e5 + 1, 40.8, 81.6}, Color{}, Color{.75, .25, .25},
+           DIFF}, // Left
+    Sphere{1e5, Position{-1e5 + 99, 40.8, 81.6}, Color{}, Color{.25, .25, .75},
+           DIFF}, // Right
+    Sphere{1e5, Position{50, 40.8, 1e5}, Color{}, Color{.75, .75, .75},
+           DIFF},                                                        // Back
+    Sphere{1e5, Position{50, 40.8, -1e5 + 170}, Color{}, Color{}, DIFF}, // Front
+    Sphere{1e5, Position{50, 1e5, 81.6}, Color{}, Color{.75, .75, .75},
+           DIFF}, // Botom
+    Sphere{1e5, Position{50, -1e5 + 81.6, 81.6}, Color{}, Color{.75, .75, .75},
+           DIFF}, // Top
+    Sphere{16.5, Position{27, 16.5, 47}, Color{}, Color{1, 1, 1} * .999,
+           SPEC}, // Mirror
+    Sphere{16.5, Position{73, 16.5, 78}, Color{}, Color{1, 1, 1} * .999,
+           REFR}, // Glass
+    Sphere{600, Position{50, 681.6 - .27, 81.6}, Color{12, 12, 12}, Color{},
+           DIFF} // Light
 };
 
 inline double clamp(double x) {
@@ -119,18 +143,18 @@ inline bool intersect(const Ray& r, double& t, std::size_t& id) {
     return t < inf;
 }
 
-Vec radiance(const Ray& r, int depth, unsigned short* Xi) {
+Color radiance(const Ray& r, int depth, unsigned short* Xi) {
     double t;           // distance to intersection
     std::size_t id = 0; // id of intersected object
     if (!intersect(r, t, id)) {
         return {}; // if miss, return black
     }
     const Sphere& obj = spheres[id]; // the hit object
-    Vec x = r.o + r.d * t;
-    Vec n = (x - obj.p).norm();
-    Vec nl = n.dot(r.d) < 0 ? n : n * -1;
-    Vec f = obj.c;
-    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    const auto x = r.o + r.d * t;
+    const auto n = (x - obj.p).norm();
+    const auto nl = n.dot(r.d) < 0 ? n : n * -1;
+    auto f = obj.c;
+    const auto p = maximum_reflection(f);
     if (++depth > 5) {
         if (erand48(Xi) < p) {
             f = f * (1 / p);
@@ -142,10 +166,11 @@ Vec radiance(const Ray& r, int depth, unsigned short* Xi) {
         double r1 = 2 * M_PI * erand48(Xi);
         double r2 = erand48(Xi);
         double r2s = sqrt(r2);
-        Vec w = nl;
-        Vec u = ((fabs(w.x) > .1 ? Vec(0, 1) : Vec(1)) % w).norm();
-        Vec v = w % u;
-        Vec d =
+        const auto w = nl;
+        const auto u =
+            ((fabs(w.x) > .1 ? Position{0, 1} : Position{1}) % w).norm();
+        const auto v = w % u;
+        const auto d =
             (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm();
         return obj.e + f.mult(radiance(Ray(x, d), depth, Xi));
     } else if (obj.refl == SPEC) // Ideal SPECULAR reflection
@@ -161,7 +186,7 @@ Vec radiance(const Ray& r, int depth, unsigned short* Xi) {
     if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) <
         0) // Total internal reflection
         return obj.e + f.mult(radiance(refl_ray, depth, Xi));
-    Vec tdir =
+    const auto tdir =
         (r.d * nnt - n * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).norm();
     double a = nt - nc;
     double b = nt + nc;
@@ -184,12 +209,13 @@ Vec radiance(const Ray& r, int depth, unsigned short* Xi) {
 int main(int argc, char* argv[]) {
     int w = 1024;
     int h = 768;
-    int samps = argc == 2 ? atoi(argv[1]) / 4 : 1;             // # samples
-    Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()); // cam pos, dir
-    Vec cx = Vec(w * .5135 / h);
-    Vec cy = (cx % cam.d).norm() * .5135;
-    Vec r;
-    std::vector<Vec> c;
+    int samps = argc == 2 ? atoi(argv[1]) / 4 : 1; // # samples
+    Ray cam(Position{50, 52, 295.6},
+            Position{0, -0.042612, -1}.norm()); // cam pos, dir
+    Position cx = Position{w * .5135 / h};
+    Position cy = (cx % cam.d).norm() * .5135;
+    Color r;
+    std::vector<Color> c;
     c.resize(static_cast<std::size_t>(w) * static_cast<std::size_t>(h));
 #pragma omp parallel for schedule(dynamic, 1) private(r) // OpenMP
     for (int y = 0; y < h; y++) {                        // Loop over image rows
@@ -198,22 +224,25 @@ int main(int argc, char* argv[]) {
         unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(y * y * y)};
         for (int x = 0; x < w; x++) { // Loop cols
             for (int sy = 0, i = (h - y - 1) * w + x; sy < 2;
-                 sy++) {                                    // 2x2 subpixel rows
-                for (int sx = 0; sx < 2; sx++, r = Vec()) { // 2x2 subpixel cols
+                 sy++) { // 2x2 subpixel rows
+                for (int sx = 0; sx < 2;
+                     sx++, r = Color{}) { // 2x2 subpixel cols
                     for (int s = 0; s < samps; s++) {
-                        double r1 = 2 * erand48(Xi);
-                        double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-                        double r2 = 2 * erand48(Xi);
-                        double dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-                        Vec d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
-                                cy * (((sy + .5 + dy) / 2 + y) / h - .5) +
-                                cam.d;
+                        const double r1 = 2 * erand48(Xi);
+                        const double dx =
+                            r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+                        const double r2 = 2 * erand48(Xi);
+                        const double dy =
+                            r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+                        auto d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
+                                 cy * (((sy + .5 + dy) / 2 + y) / h - .5) +
+                                 cam.d;
                         r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) *
                                     (1. / samps);
                     } // Camera rays are pushed ^^^^^ forward to start in interior
                     c[static_cast<std::size_t>(i)] =
                         c[static_cast<std::size_t>(i)] +
-                        Vec(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+                        Color{clamp(r.r), clamp(r.g), clamp(r.b)} * .25;
                 }
             }
         }
@@ -222,6 +251,6 @@ int main(int argc, char* argv[]) {
     fprintf(f, "P3\n%d %d\n%d\n", w, h, 255);
     for (std::size_t i = 0;
          i < static_cast<std::size_t>(w) * static_cast<std::size_t>(h); i++) {
-        fprintf(f, "%d %d %d ", to_int(c[i].x), to_int(c[i].y), to_int(c[i].z));
+        fprintf(f, "%d %d %d ", to_int(c[i].r), to_int(c[i].g), to_int(c[i].b));
     }
 }
