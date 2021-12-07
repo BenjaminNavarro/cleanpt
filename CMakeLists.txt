@@ -10,9 +10,14 @@ project(
 # handle additional warnings
 include(cmake/CompilerOptions.cmake)
 
+# import sanitizers helpers
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+find_package(Sanitizers)
+
 add_executable(cleanpt main.cpp)
 target_compile_features(cleanpt PRIVATE cxx_std_17)
 add_warnings(cleanpt)
+add_sanitizers(cleanpt)
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
