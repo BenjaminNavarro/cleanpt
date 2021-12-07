@@ -28,5 +28,5 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       # No unit tests for now so just run the program and look for a crash or triggered sanitizer
-      run: cleanpt 4
+      run: ./cleanpt 4
       
