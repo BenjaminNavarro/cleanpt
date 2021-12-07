@@ -32,7 +32,7 @@ cmake --build .
  - [x] Set-up clang-tidy & fix what needs to be fixed
  - [x] Turn on most relevant warnings on & fix what needs to be fixed
  - [x] Add sanitizers support & fix what needs to be fixed
- - [ ] Set-up CI to make sure the code build without warnings on multiple platforms
+ - [x] Set-up CI to make sure the code build without warnings on multiple platforms
  - [ ] Start reading the code and refactoring it. I guess I'll need to:
    - [ ] Rename variables and/or functions to better describe their meaning
    - [ ] Comment the unintuitive parts
