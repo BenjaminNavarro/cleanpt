@@ -109,10 +109,11 @@ inline bool intersect(const Ray& r, double& t, std::size_t& id) {
     assert(n > 0);
     double d;
     double inf = t = 1e20;
-    for (std::size_t i = n - 1; i != 0; i--) {
-        if (((d = spheres[i].intersect(r)) != 0.0) && d < t) {
+    for (std::size_t i = n; i != 0; i--) {
+        const auto sphere_idx = i - 1;
+        if (((d = spheres[sphere_idx].intersect(r)) != 0.0) && d < t) {
             t = d;
-            id = i;
+            id = sphere_idx;
         }
     }
     return t < inf;
