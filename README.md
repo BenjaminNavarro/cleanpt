@@ -33,6 +33,7 @@ cmake --build .
  - [x] Turn on most relevant warnings on & fix what needs to be fixed
  - [x] Add sanitizers support & fix what needs to be fixed
  - [x] Set-up CI to make sure the code build without warnings on multiple platforms
+ - [ ] Add unit tests to avoid breaking stuff while refactoring
  - [ ] Start reading the code and refactoring it. I guess I'll need to:
    - [ ] Rename variables and/or functions to better describe their meaning
    - [ ] Comment the unintuitive parts
